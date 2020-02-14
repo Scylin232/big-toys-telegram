@@ -5,7 +5,7 @@ let easyPayData = { pageId: null, appId: null, bearerToken: null }
 let counter = 0
 
 const scheduler = () => {
-  schedule.scheduleJob('*/3 * * * *', () => {
+  schedule.scheduleJob('*/10 * * * *', () => {
     axios.get('http://localhost:4515/').then(res => {
       easyPayData = res.data
       counter += 1
