@@ -46,6 +46,7 @@ app.post('/products', async (req, res) => {
 app.delete('/products', async (req, res) => {
   const { title, description, city, area, price } = req.query
   console.log(title, description, city, area, price)
+  await productsModel.deleteMany({ title, description, city, area, price })
   return await res.status(200).send('Successfully deleted!')
 })
 
