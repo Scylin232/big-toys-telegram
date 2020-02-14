@@ -3,8 +3,11 @@ import { availableScenarious } from './helpers/markup'
 import { bot } from './bootstrap'
 import { session } from './services/Session'
 
-bot.start(async ctx => {
+bot.start(async (ctx: any) => {
   try {
+    if (ctx.startPayload) {
+      await anthology.get('addReferral')(ctx)(Number(ctx.startPayload))
+    }
     await anthology.get('initial')(ctx)
   } catch (err) {
     console.error(err)

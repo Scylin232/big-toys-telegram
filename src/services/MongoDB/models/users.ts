@@ -5,7 +5,7 @@ const UsersSchema: Schema = new Schema({
   username: String,
   registrationDate: String,
   countOfPurchases: Number,
-  referralFriends: Number,
+  referralFriends: Array,
   bonusBalance: Number,
   historyOfPurchases: Array
 })

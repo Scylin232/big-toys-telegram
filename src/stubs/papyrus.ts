@@ -21,22 +21,22 @@ export default {
 -Нажмите 'Я оплатил заказ'
 * Вы получите товар автоматически если деньги поступили на кошелек
 Контакты оператора - https://t.me/kr_fen2`,
-  discountSystem: (referralFriends: number, bonusBalance: number, userId: number) => `👥 Система скидок
+  discountSystem: (referralFriends: any[], bonusBalance: number, userId: number) => `👥 Система скидок
 
-Вы привели друзей - ${referralFriends} шт.
+Вы привели друзей - ${referralFriends.length} шт.
 Ваш бонусный баланс - ${bonusBalance} грн.
 Ваша реф. ссылка - https://t.me/big71_bot?start=${userId}
 
 За каждую покупку вашего друга вы будете получать 2% от суммы его заказа.
 Вы можете использовать реферальный баланс как скидку на покупку любого товара.`,
   enterPromocode: '💰Введите ваш промокод',
-  historyOfPurchases: (countOfPurchases: number, historyOfPurchases: any[]) => {
-    let summaryString = `📊 История ваших покупок (${countOfPurchases} шт.)\n`
+  historyOfPurchases: (historyOfPurchases: any[]) => {
+    let summaryString = `📊 История ваших покупок (${historyOfPurchases.length} шт.)\n`
     if (historyOfPurchases.length === 0) {
       summaryString += '\nВы еще ничего не купили!'
     }
     historyOfPurchases.forEach(purchase => {
-      // Do something
+      summaryString += `\nТовар: ${purchase.response}\nДата: ${purchase.date}\nЦена: ${purchase.price} грн.\n`
     })
     return summaryString
   },

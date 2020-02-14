@@ -12,7 +12,7 @@ const scenarious = {
     const user = await usersModel.findOne({ userId: ctx.from.id })
     const places = await placesModel.find({})
     if (user === null) {
-      await usersModel.create({ userId: ctx.from.id, username: ctx.from.username, registrationDate: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), countOfPurchases: 0, referralFriends: 0, bonusBalance: 0, historyOfPurchases: [] })
+      await usersModel.create({ userId: ctx.from.id, username: ctx.from.username, registrationDate: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), countOfPurchases: 0, referralFriends: [], bonusBalance: 0, historyOfPurchases: [] })
     }
     await session.init(ctx.from.id)
     await ctx.reply(papyrus.initialSecond, 
@@ -75,8 +75,8 @@ const scenarious = {
     )
   },
   historyOfPurchases: async ctx => {
-    const user = await usersModel.findOne({ userId: ctx.from.id })
-    return await ctx.editMessageText(papyrus.historyOfPurchases(user.historyOfPurchases.length, user.historyOfPurchases),
+    const history = await historyModel.find({ buyerId: ctx.from.id })
+    return await ctx.editMessageText(papyrus.historyOfPurchases(history),
       Markup.inlineKeyboard(inlineKeyboards.secondBack)
         .resize()
         .extra()
@@ -150,6 +150,13 @@ const scenarious = {
         .extra()
     )
   },
+  addReferral: ctx => async inviterId => {
+    const user = await usersModel.findOne({ userId: inviterId })
+    if (user.referralFriends.indexOf(ctx.from.id) !== -1) {
+      return;
+    }
+    return await usersModel.findOneAndUpdate({ userId: inviterId }, { $push: { referralFriends: ctx.from.id } })
+  }
 }
 
 const anthology = new Map()

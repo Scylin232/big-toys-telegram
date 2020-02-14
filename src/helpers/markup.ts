@@ -13,7 +13,8 @@ const availableScenarious = {
   displayOrderDetails: 'displayOrderDetails',
   discardOrder: 'discardOrder',
   payProduct: 'payProduct',
-  checkPayment: 'checkPayment'
+  checkPayment: 'checkPayment',
+  addReferral: 'addReferral',
 }
 
 export { availableScenarious }
