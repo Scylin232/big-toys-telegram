@@ -40,5 +40,25 @@ export default {
     })
     return summaryString
   },
-  promocodeDoesNotExist: '⛔️ Промокод не найден!'
+  promocodeDoesNotExist: '⛔️ Промокод не найден!',
+  getProductsByCity: '➖ Выберите товар для просмотра районов',
+  getAreasByProduct: '➖ Выберите удобный для вас район города',
+  displayProductDetails: (title: string, description: string, city: string, area: string) => `${title}
+Описание: ${description}
+Город и район: ${city} (${area})
+
+Товар зарезервирован, оплатите его в течении 30 минут
+➖ Выберите способ оплаты товара:`,
+  orderDiscarded: 'Ваш заказ успешно удален!',
+  payProduct: (title, description, city, area, wallet, price) => `${title}
+Описание: ${description}
+Город и район: ${city} (${area})
+
+◼️ Инструкция по оплате товара через EasyPay.
+Пополните кошелек ${wallet} 
+одним платежом на сумму ${price} грн или больше (без учета комиссии)
+
+➖ПОСЛЕ ПОПОЛНЕНИЯ КОШЕЛЬКА ПОДОЖДИТЕ 1-2 МИН И НАЖМИТЕ 'ПРОВЕРИТЬ ОПЛАТУ'`,
+  orderData: (title, response) => `Данные вашего заказа (${title}):\n\n${response}`,
+  succesfulPayment: '✔ Благодарим за покупку!\nДля продолжения работы с ботом введите - /start'
 }

@@ -11,7 +11,8 @@ function isJson(toParse: string) {
 }
 
 const availableEntities = [
-  'scope'
+  'scope',
+  'product'
 ]
 
 export const redisClient: any = redis.createClient({
@@ -42,7 +43,8 @@ const getSession = async (userId)  => {
 export const session = {
   init: async (userId) => {
     const userData = {
-      scope: null
+      scope: null,
+      product: null,
     }
     if (redisClient) {
       const existedUser = await redisClient.hgetAsync(process.env.BOT_ALIAS, userId)
@@ -78,7 +80,8 @@ export const session = {
       throw new Error('⚠️ Користувач не існує.')
     }
     const userData = {
-      scope: null
+      scope: null,
+      product: null
     }
     return await redisClient.hsetAsync(
       process.env.BOT_ALIAS,

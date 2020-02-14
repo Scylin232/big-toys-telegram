@@ -1,7 +1,7 @@
 import uuidv4 from 'uuid/v4'
 import cors from 'cors'
 import express from 'express'
-import { placesModel, productsModel } from '../MongoDB'
+import { placesModel, productsModel, usersModel, historyModel } from '../MongoDB'
 
 const app = express()
 
@@ -45,7 +45,6 @@ app.post('/products', async (req, res) => {
 
 app.delete('/products', async (req, res) => {
   const { title, description, city, area, price } = req.query
-  console.log(title, description, city, area, price)
   await productsModel.deleteMany({ title, description, city, area, price })
   return await res.status(200).send('Successfully deleted!')
 })
@@ -56,6 +55,26 @@ app.put('/products', async (req, res) => {
   await productsModel.updateMany({ title: oldData.title, description: oldData.description, city: oldData.city, area: oldData.area, price: oldData.price },
   { title: newData.title, description: newData.description, city: newData.city, area: newData.area, price: newData.price})
   return await res.status(200).send('Successfully updated!')
+})
+
+app.get('/users', async (req, res) => {
+  const users = await usersModel.find({})
+  return await res.status(200).send(users)
+})
+
+app.get('/history', async (req, res) => {
+  const history = await historyModel.find({})
+  return await res.status(200).send(history)
+})
+
+app.get('/statistics', async (req, res) => {
+  let allTimePrice = 0
+  const history = await historyModel.find({})
+  const users = await usersModel.find({})
+  history.forEach(record => {
+    allTimePrice += record.price
+  })
+  return await res.status(200).send({ price: allTimePrice, usersCount: users.length, sellingCount: history.length })
 })
 
 let userToken;

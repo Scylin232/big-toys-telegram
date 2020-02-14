@@ -8,7 +8,12 @@ const availableScenarious = {
   enterPromocode: 'enterPromocode',
   historyOfPurchases: 'historyOfPurchases',
   applyPromocode: 'applyPromocode',
-  getProductsByCity: 'getProductsByCity'
+  getProductsByCity: 'getProductsByCity',
+  getAreasByProduct: 'getAreasByProduct',
+  displayOrderDetails: 'displayOrderDetails',
+  discardOrder: 'discardOrder',
+  payProduct: 'payProduct',
+  checkPayment: 'checkPayment'
 }
 
 export { availableScenarious }

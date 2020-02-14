@@ -30,6 +30,15 @@ bot.on('message', async ctx => {
 
 bot.on('callback_query', async ctx => {
   const callbackQuery = ctx.callbackQuery.data
+  if (callbackQuery.startsWith('payProduct:')) {
+    return await anthology.get('payProduct')(ctx)(callbackQuery.substr(11))
+  }
+  if (callbackQuery.startsWith('displayOrderDetails:')) {
+    return await anthology.get('displayOrderDetails')(ctx)(callbackQuery.substr(20))
+  }
+  if (callbackQuery.startsWith('getAreasByProduct:')) {
+    return await anthology.get('getAreasByProduct')(ctx)(callbackQuery.substr(18))
+  }
   if (callbackQuery.startsWith('getProductsByCity:')) {
     return await anthology.get('getProductsByCity')(ctx)(callbackQuery.substr(18))
   }

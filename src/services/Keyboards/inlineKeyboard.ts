@@ -29,5 +29,25 @@ export default {
   discountSystem: [
     [{ text: '🎁 Ввести промокод', callback_data: 'enterPromocode' }], 
     [{ text: '⚫ Главное меню', callback_data: 'back' }],
+  ],
+  products: (products) => {
+    const keyboard = [[{ text: '🔙 Назад', callback_data: 'back' }]]
+    products.forEach(product => {
+      keyboard.unshift([{ text: product.title, callback_data: `getAreasByProduct:${product._id}` }])
+    })
+    return keyboard
+  },
+  areas: (areas) => {
+    const keyboard = [[{ text: '⚫ Главное меню', callback_data: 'back' }]]
+    areas.forEach(area => {
+      keyboard.unshift([{ text: area, callback_data: `displayOrderDetails:${area}` }])
+    })
+    return keyboard
+  },
+  paymentMethod: (price, area) => [
+    [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `payProduct:${area}` }, { text: `✖ Отменить заказ`, callback_data: 'discardOrder' }],
+  ],
+  payProduct: [
+    [{ text: '✔ Проверить оплату', callback_data: 'checkPayment' }, { text: '✖ Отмена', callback_data: 'discardOrder' }]
   ]
 }
