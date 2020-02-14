@@ -2,6 +2,7 @@ import uuidv4 from 'uuid/v4'
 import cors from 'cors'
 import express from 'express'
 import { placesModel, productsModel, usersModel, historyModel, promocodeModel } from '../MongoDB'
+import anthology from '../Scenario'
 
 const app = express()
 
@@ -118,7 +119,8 @@ app.delete('/promocode', async (req, res) => {
 })
 
 app.post('/mailing', async (req, res) => {
-  console.log(req.query)
+  await anthology.get('adminMakeMailing')(req.query.mailingText)
+  return await res.status(200).send('Mailing successfully!')
 })
 
 let userToken;

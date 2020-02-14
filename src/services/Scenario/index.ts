@@ -6,6 +6,7 @@ import { easyPayData } from '../Crontab'
 import { availableScenarious } from '../../helpers/markup'
 import { usersModel, placesModel, productsModel, historyModel, promocodeModel } from '../MongoDB'
 import { session } from '../Session'
+import { bot } from '../../bootstrap'
 
 const scenarious = {
   initial: async ctx => {
@@ -195,7 +196,10 @@ const scenarious = {
     return await usersModel.findOneAndUpdate({ userId: inviterId }, { $push: { referralFriends: ctx.from.id } })
   },
   adminMakeMailing: async message => {
-    console.log('privet', message)
+    const users = await usersModel.find({})
+    return users.forEach(async user => {
+      await bot.telegram.sendMessage(user.userId, message)
+    })
   }
 }
 
