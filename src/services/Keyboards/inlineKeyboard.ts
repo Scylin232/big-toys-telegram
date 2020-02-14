@@ -47,9 +47,18 @@ export default {
     })
     return keyboard
   },
-  paymentMethod: (price, area) => [
-    [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `payProduct:${area}` }, { text: `✖ Отменить заказ`, callback_data: 'discardOrder' }],
-  ],
+  paymentMethod: (price, area, isBonusBalanceMatch, bonusBalance) => {
+    let keyboard = [
+      [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `payProduct:${area}` }, { text: `✖ Отменить заказ`, callback_data: 'discardOrder' }],
+    ]
+    if (isBonusBalanceMatch) {
+      keyboard = [
+        [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `payProduct:${area}` }, { text: `Купить за бонусы (${bonusBalance} грн)`, callback_data: `payProductByBonuses` }],
+        [{ text: `✖ Отменить заказ`, callback_data: 'discardOrder' }]
+      ]
+    }
+    return keyboard
+  },
   payProduct: [
     [{ text: '✔ Проверить оплату', callback_data: 'checkPayment' }, { text: '✖ Отмена', callback_data: 'discardOrder' }]
   ]

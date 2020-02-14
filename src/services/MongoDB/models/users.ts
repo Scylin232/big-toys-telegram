@@ -5,9 +5,9 @@ const UsersSchema: Schema = new Schema({
   username: String,
   registrationDate: String,
   countOfPurchases: Number,
-  referralFriends: Array,
   bonusBalance: Number,
-  historyOfPurchases: Array
+  referralFriends: Array,
+  inviterId: { type: Number, default: null  },
 })
 
 export { UsersSchema }

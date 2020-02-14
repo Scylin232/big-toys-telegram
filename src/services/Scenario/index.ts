@@ -4,7 +4,7 @@ import inlineKeyboards from '../Keyboards/inlineKeyboard'
 import papyrus from '../../stubs/papyrus'
 import { easyPayData } from '../Crontab'
 import { availableScenarious } from '../../helpers/markup'
-import { usersModel, placesModel, productsModel, historyModel } from '../MongoDB'
+import { usersModel, placesModel, productsModel, historyModel, promocodeModel } from '../MongoDB'
 import { session } from '../Session'
 
 const scenarious = {
@@ -83,7 +83,13 @@ const scenarious = {
     )
   },
   applyPromocode: ctx => async promocode => {
-    console.log(promocode)
+    const promo = await promocodeModel.findOne({ promo: promocode })
+    if (promo) {
+      await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { bonusBalance: promo.increaseValue } })
+      await promocodeModel.deleteOne({ _id: promo._id })
+      await session.update(ctx.from.id, 'scope', null)
+      return await ctx.reply(papyrus.promocodeUsed(promo.increaseValue))
+    }
     return await ctx.reply(papyrus.promocodeDoesNotExist)
   },
   getProductsByCity: ctx => async city => {
@@ -107,8 +113,13 @@ const scenarious = {
   displayOrderDetails: ctx => async area => {
     const productId = await session.getEntity(ctx.from.id, 'product')
     const product = await productsModel.findById(productId)
+    const user = await usersModel.findOne({ userId: ctx.from.id })
+    let isBonusBalanceMatch = false
+    if (user.bonusBalance >= product.price) {
+      isBonusBalanceMatch = true
+    }
     return await ctx.editMessageText(papyrus.displayProductDetails(product.title, product.description, product.city, area),
-      Markup.inlineKeyboard(inlineKeyboards.paymentMethod(product.price, area))
+      Markup.inlineKeyboard(inlineKeyboards.paymentMethod(product.price, area, isBonusBalanceMatch, user.bonusBalance))
         .resize()
         .extra()
     )
@@ -132,12 +143,37 @@ const scenarious = {
         .extra()
     )
   },
+  payProductByBonuses: async ctx => {
+    const productId = await session.getEntity(ctx.from.id, 'product')
+    const product = await productsModel.findById(productId)
+    if (product === null) {
+      return;
+    }
+    const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
+    await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1, bonusBalance: Number(-Math.abs(product.price)) } })
+    await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
+    await productsModel.findByIdAndUpdate(productId, { stock: product.stock.filter(elem => elem !== stock) })
+    await session.checkout(ctx.from.id)
+    await ctx.editMessageText(papyrus.orderData(product.title, stock))
+    return await ctx.reply(papyrus.succesfulPayment,
+      Markup.inlineKeyboard(inlineKeyboards.secondBack)
+        .resize()
+        .extra()
+    )
+  },
   checkPayment: async ctx => {
     const productId = await session.getEntity(ctx.from.id, 'product')
     const product = await productsModel.findById(productId)
+    if (product === null) {
+      return;
+    }
+    const user = await usersModel.findOne({ userId: ctx.from.id })
     const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
     if (false) {
       return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
+    }
+    if (user.inviterId) {
+      await usersModel.findOneAndUpdate({ userId: user.inviterId }, { $inc: { bonusBalance: Math.round((2 / 100) * product.price) } }) 
     }
     await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1 } })
     await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
@@ -155,6 +191,7 @@ const scenarious = {
     if (user.referralFriends.indexOf(ctx.from.id) !== -1) {
       return;
     }
+    await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { inviterId })
     return await usersModel.findOneAndUpdate({ userId: inviterId }, { $push: { referralFriends: ctx.from.id } })
   }
 }
