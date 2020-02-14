@@ -30,6 +30,9 @@ bot.on('message', async ctx => {
 
 bot.on('callback_query', async ctx => {
   const callbackQuery = ctx.callbackQuery.data
+  if (callbackQuery.startsWith('getProductsByCity:')) {
+    return await anthology.get('getProductsByCity')(ctx)(callbackQuery.substr(18))
+  }
   if (Object.values(availableScenarious).indexOf(callbackQuery) > -1) {
     for (const prop in availableScenarious) {
         if (availableScenarious.hasOwnProperty(prop)) {

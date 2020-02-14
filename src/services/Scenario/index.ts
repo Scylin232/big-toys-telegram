@@ -4,18 +4,19 @@ import inlineKeyboards from '../Keyboards/inlineKeyboard'
 import papyrus from '../../stubs/papyrus'
 import { easyPayData } from '../Crontab'
 import { availableScenarious } from '../../helpers/markup'
-import { usersModel } from '../MongoDB'
+import { usersModel, placesModel } from '../MongoDB'
 import { session } from '../Session'
 
 const scenarious = {
   initial: async ctx => {
     const user = await usersModel.findOne({ userId: ctx.from.id })
+    const places = await placesModel.find({})
     if (user === null) {
       await usersModel.create({ userId: ctx.from.id, username: ctx.from.username, registrationDate: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), countOfPurchases: 0, referralFriends: 0, bonusBalance: 0, historyOfPurchases: [] })
     }
     await session.init(ctx.from.id)
     await ctx.reply(papyrus.initialSecond, 
-      Markup.inlineKeyboard(inlineKeyboards.initial)
+      Markup.inlineKeyboard(inlineKeyboards.initial(places))
         .resize()
         .extra()
     )
@@ -49,9 +50,10 @@ const scenarious = {
     )
   },
   back: async ctx => {
+    const places = await placesModel.find({})
     await session.update(ctx.from.id, 'scope', null)
     return await ctx.editMessageText(papyrus.initialSecond,
-      Markup.inlineKeyboard(inlineKeyboards.initial)
+      Markup.inlineKeyboard(inlineKeyboards.initial(places))
         .resize()
         .extra()
     )
@@ -83,6 +85,9 @@ const scenarious = {
   applyPromocode: ctx => async promocode => {
     console.log(promocode)
     return await ctx.reply(papyrus.promocodeDoesNotExist)
+  },
+  getProductsByCity: ctx => async city => {
+    console.log(city)
   }
 }
 

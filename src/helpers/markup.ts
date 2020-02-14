@@ -7,7 +7,8 @@ const availableScenarious = {
   systemOfDiscounts: 'systemOfDiscounts',
   enterPromocode: 'enterPromocode',
   historyOfPurchases: 'historyOfPurchases',
-  applyPromocode: 'applyPromocode'
+  applyPromocode: 'applyPromocode',
+  getProductsByCity: 'getProductsByCity'
 }
 
 export { availableScenarious }
