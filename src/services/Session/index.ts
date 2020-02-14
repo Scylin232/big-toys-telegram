@@ -10,11 +10,6 @@ function isJson(toParse: string) {
   return !!JSON.parse(toParse)
 }
 
-const availableEntities = [
-  'scope',
-  'product'
-]
-
 export const redisClient: any = redis.createClient({
   url: process.env.REDIS_URL,
   retry_strategy: options => {
@@ -45,6 +40,8 @@ export const session = {
     const userData = {
       scope: null,
       product: null,
+      oldBalance: null,
+      wallet: null
     }
     if (redisClient) {
       const existedUser = await redisClient.hgetAsync(process.env.BOT_ALIAS, userId)
@@ -59,7 +56,7 @@ export const session = {
     return await redisClient.hdelAsync(process.env.BOT_ALIAS, userId)
   },
   getEntity: async (userId, entity) => {
-    if (!userId || !availableEntities.includes(entity)) {
+    if (!userId) {
       return false
     }
     const session = await getSession(userId)
@@ -81,7 +78,9 @@ export const session = {
     }
     const userData = {
       scope: null,
-      product: null
+      product: null,
+      oldBalance: null,
+      wallet: null
     }
     return await redisClient.hsetAsync(
       process.env.BOT_ALIAS,

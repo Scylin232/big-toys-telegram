@@ -138,7 +138,19 @@ const scenarious = {
   payProduct: ctx => async area => { 
     const productId = await session.getEntity(ctx.from.id, 'product')
     const product = await productsModel.findById(productId)
-    return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, '12345678', product.price),
+    const easypay = await axios({
+      url: 'https://api.easypay.ua/api/wallets/get',
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${easyPayData.bearerToken}`,
+        'AppId': easyPayData.appId,
+        'PageId': easyPayData.pageId
+      }
+    })
+    const wallet = easypay.data.wallets[Math.floor(Math.random() * easypay.data.wallets.length)]
+    await session.update(ctx.from.id, 'oldBalance', wallet.balance)
+    await session.update(ctx.from.id, 'wallet', wallet.id)
+    return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
       Markup.inlineKeyboard(inlineKeyboards.payProduct)
         .resize()
         .extra()
@@ -164,15 +176,26 @@ const scenarious = {
   },
   checkPayment: async ctx => {
     const productId = await session.getEntity(ctx.from.id, 'product')
+    const oldBalance = await session.getEntity(ctx.from.id, 'oldBalance')
+    const walletId = await session.getEntity(ctx.from.id, 'wallet')
+    const easypay = await axios({
+      url: `https://api.easypay.ua/api/wallets/get/${walletId}`,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${easyPayData.bearerToken}`,
+        'AppId': easyPayData.appId,
+        'PageId': easyPayData.pageId
+      }
+    })
     const product = await productsModel.findById(productId)
+    if (easypay.data.wallets[0].balance < Number(oldBalance) + Number(product.price) ) {
+      return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
+    }
     if (product === null) {
       return;
     }
     const user = await usersModel.findOne({ userId: ctx.from.id })
     const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
-    if (false) {
-      return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
-    }
     if (user.inviterId) {
       await usersModel.findOneAndUpdate({ userId: user.inviterId }, { $inc: { bonusBalance: Math.round((2 / 100) * product.price) } }) 
     }
