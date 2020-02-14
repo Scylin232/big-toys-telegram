@@ -1,7 +1,7 @@
 import uuidv4 from 'uuid/v4'
 import cors from 'cors'
 import express from 'express'
-import { placesModel, productsModel, usersModel, historyModel } from '../MongoDB'
+import { placesModel, productsModel, usersModel, historyModel, promocodeModel } from '../MongoDB'
 
 const app = express()
 
@@ -98,6 +98,27 @@ app.get('/statistics', async (req, res) => {
     allTimePrice += record.price
   })
   return await res.status(200).send({ price: allTimePrice, usersCount: users.length, sellingCount: history.length, products })
+})
+
+app.get('/promocode', async (req, res) => {
+  const promocodes = await promocodeModel.find({})
+  return await res.status(200).send(promocodes)
+})
+
+app.post('/promocode', async (req, res) => {
+  const { promo, increaseValue } = req.query
+  await promocodeModel.create({ promo, increaseValue: Number(increaseValue) })
+  return await res.status(200).send('Successfully created!')
+})
+
+app.delete('/promocode', async (req, res) => {
+  const { promo, increaseValue } = req.query
+  await promocodeModel.deleteMany({ promo, increaseValue: Number(increaseValue) })
+  return await res.status(200).send('Successfully deleted!')
+})
+
+app.post('/mailing', async (req, res) => {
+  console.log(req.query)
 })
 
 let userToken;

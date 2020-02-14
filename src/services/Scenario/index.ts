@@ -193,6 +193,9 @@ const scenarious = {
     }
     await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { inviterId })
     return await usersModel.findOneAndUpdate({ userId: inviterId }, { $push: { referralFriends: ctx.from.id } })
+  },
+  adminMakeMailing: async message => {
+    console.log('privet', message)
   }
 }
 

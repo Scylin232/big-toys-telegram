@@ -15,7 +15,8 @@ const availableScenarious = {
   payProduct: 'payProduct',
   checkPayment: 'checkPayment',
   addReferral: 'addReferral',
-  payProductByBonuses: 'payProductByBonuses'
+  payProductByBonuses: 'payProductByBonuses',
+  adminMakeMailing: 'adminMakeMailing'
 }
 
 export { availableScenarious }
