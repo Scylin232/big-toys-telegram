@@ -135,13 +135,15 @@ const scenarious = {
   checkPayment: async ctx => {
     const productId = await session.getEntity(ctx.from.id, 'product')
     const product = await productsModel.findById(productId)
+    const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
     if (false) {
       return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
     }
-    await session.checkout(ctx.from.id)
     await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1 } })
-    await historyModel.create({ buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
-    await ctx.editMessageText(papyrus.orderData(product.title, 'Какие-либо данные'))
+    await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
+    await productsModel.findByIdAndUpdate(productId, { stock: product.stock.filter(elem => elem !== stock) })
+    await session.checkout(ctx.from.id)
+    await ctx.editMessageText(papyrus.orderData(product.title, stock))
     return await ctx.reply(papyrus.succesfulPayment,
       Markup.inlineKeyboard(inlineKeyboards.secondBack)
         .resize()

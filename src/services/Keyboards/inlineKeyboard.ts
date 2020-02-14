@@ -33,6 +33,9 @@ export default {
   products: (products) => {
     const keyboard = [[{ text: '🔙 Назад', callback_data: 'back' }]]
     products.forEach(product => {
+      if (product.stock.length === 0) {
+        return;
+      }
       keyboard.unshift([{ text: product.title, callback_data: `getAreasByProduct:${product._id}` }])
     })
     return keyboard

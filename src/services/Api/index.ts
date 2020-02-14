@@ -15,20 +15,30 @@ app.get('/places', async (req, res) => {
 
 app.post('/places', async (req, res) => {
   const { city, areas } = req.query
-  await placesModel.create({ city, areas })
+  await placesModel.create({ city, areas: areas.split(',') })
   return await res.status(200).send('Succesfuly created!')
 })
 
 app.delete('/places', async (req, res) => {
   const { city, areas } = req.query
-  await placesModel.deleteMany({ city, areas })
+  if (Array.isArray(areas)) {
+    await placesModel.deleteMany({ city, areas })
+  } else {
+    await placesModel.deleteMany({ city, areas: areas.split(',') })
+  }
   return await res.status(200).send('Successfully deleted!')
 })
 
 app.put('/places', async (req, res) => {
   const oldData = JSON.parse(req.query.old)
   const newData = JSON.parse(req.query.new)
-  await placesModel.updateMany({ city: oldData.city, areas: oldData.areas }, { city: newData.city, areas: newData.areas })
+  if (Array.isArray(oldData.areas) && !Array.isArray(newData.areas)) {
+    await placesModel.updateMany({ city: oldData.city, areas: oldData.areas }, { city: newData.city, areas: newData.areas.split(',') })
+  } else if (!Array.isArray(oldData.areas)) {
+    await placesModel.updateMany({ city: oldData.city, areas: oldData.areas.split(',') }, { city: newData.city, areas: newData.areas.split(',') })
+  } else {
+    await placesModel.updateMany({ city: oldData.city, areas: oldData.areas }, { city: newData.city, areas: newData.areas })
+  }
   return await res.status(200).send('Successfully updated!')
 })
 
@@ -38,22 +48,34 @@ app.get('/products', async (req, res) => {
 })
 
 app.post('/products', async (req, res) => {
-  const { title, description, city, area, price } = req.query
-  await productsModel.create({ title, description, city, area, price })
+  const { title, description, city, area, price, stock } = req.query
+  await productsModel.create({ title, description, city, area, price, stock: stock.split(',') })
   return await res.status(200).send('Succesfuly created!')
 })
 
 app.delete('/products', async (req, res) => {
-  const { title, description, city, area, price } = req.query
-  await productsModel.deleteMany({ title, description, city, area, price })
+  const { title, description, city, area, price, stock } = req.query
+  if (Array.isArray(stock)) {
+    await productsModel.deleteMany({ title, description, city, area, price, stock })
+  } else {
+    await productsModel.deleteMany({ title, description, city, area, price, stock: stock.split(',') })
+  }
   return await res.status(200).send('Successfully deleted!')
 })
 
 app.put('/products', async (req, res) => {
   const oldData = JSON.parse(req.query.old)
   const newData = JSON.parse(req.query.new)
-  await productsModel.updateMany({ title: oldData.title, description: oldData.description, city: oldData.city, area: oldData.area, price: oldData.price },
-  { title: newData.title, description: newData.description, city: newData.city, area: newData.area, price: newData.price})
+  if (Array.isArray(oldData.stock) && !Array.isArray(newData.stock)) {
+    await productsModel.updateMany({ title: oldData.title, description: oldData.description, city: oldData.city, area: oldData.area, price: oldData.price, stock: oldData.stock },
+      { title: newData.title, description: newData.description, city: newData.city, area: newData.area, price: newData.price, stock: newData.stock.split(',')})
+  } else if (!Array.isArray(oldData.stock)) {
+    await productsModel.updateMany({ title: oldData.title, description: oldData.description, city: oldData.city, area: oldData.area, price: oldData.price, stock: oldData.stock.split(',') },
+      { title: newData.title, description: newData.description, city: newData.city, area: newData.area, price: newData.price, stock: newData.stock.split(',')})
+  } else {
+    await productsModel.updateMany({ title: oldData.title, description: oldData.description, city: oldData.city, area: oldData.area, price: oldData.price, stock: oldData.stock },
+      { title: newData.title, description: newData.description, city: newData.city, area: newData.area, price: newData.price, stock: newData.stock})
+  }
   return await res.status(200).send('Successfully updated!')
 })
 
@@ -71,10 +93,11 @@ app.get('/statistics', async (req, res) => {
   let allTimePrice = 0
   const history = await historyModel.find({})
   const users = await usersModel.find({})
+  const products = await productsModel.find({})
   history.forEach(record => {
     allTimePrice += record.price
   })
-  return await res.status(200).send({ price: allTimePrice, usersCount: users.length, sellingCount: history.length })
+  return await res.status(200).send({ price: allTimePrice, usersCount: users.length, sellingCount: history.length, products })
 })
 
 let userToken;

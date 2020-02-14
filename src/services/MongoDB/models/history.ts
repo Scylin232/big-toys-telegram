@@ -5,6 +5,7 @@ const HistorySchema: Schema = new Schema({
   buyerUsername: String,
   price: Number,
   date: String,
+  response: String
 })
 
 export { HistorySchema }

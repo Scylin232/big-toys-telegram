@@ -6,6 +6,7 @@ const ProductsSchema: Schema = new Schema({
   city: String,
   area: Array,
   price: Number,
+  stock: Array,
 })
 
 export { ProductsSchema }
