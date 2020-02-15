@@ -1,8 +1,11 @@
 import schedule from 'node-schedule'
 import axios from 'axios'
+import dotenv from 'dotenv'
 
 let easyPayData = { pageId: null, appId: null, bearerToken: null }
 let counter = 0
+
+dotenv.config()
 
 const scheduler = () => {
   schedule.scheduleJob('*/10 * * * *', () => {
