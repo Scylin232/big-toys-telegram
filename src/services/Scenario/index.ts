@@ -16,12 +16,12 @@ const scenarious = {
       await usersModel.create({ userId: ctx.from.id, username: ctx.from.username, registrationDate: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), countOfPurchases: 0, referralFriends: [], bonusBalance: 0, historyOfPurchases: [] })
     }
     await session.init(ctx.from.id)
-    await ctx.reply(papyrus.initialSecond, 
+    await ctx.reply(papyrus.initial)
+    return await ctx.reply(papyrus.initialSecond, 
       Markup.inlineKeyboard(inlineKeyboards.initial(places))
         .resize()
         .extra()
     )
-    return await ctx.reply(papyrus.initial)
   },
   coshInfo: async ctx => {
     const response = await axios({

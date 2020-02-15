@@ -8,10 +8,9 @@ dotenv.config()
 const bot = new Telegraf(process.env.BOT_TOKEN)
 
 try {
-  bot.telegram.setWebhook(process.env.EXPOSE_URL)
-  bot.startWebhook('/', null, Number(process.env.PORT))
+  bot.launch()
   app.listen(4615, () => {
-    console.log('Example app listening on port 4615!')
+    console.log('Express and Bot listening on port 4615!')
   })
   console.log('Bot started on PORT: ', process.env.PORT)
 } catch (err) {
