@@ -8,6 +8,8 @@ import { usersModel, placesModel, productsModel, historyModel, promocodeModel } 
 import { session } from '../Session'
 import { bot } from '../../bootstrap'
 
+const busyWallets = []
+
 const scenarious = {
   initial: async ctx => {
     const user = await usersModel.findOne({ userId: ctx.from.id })
@@ -126,8 +128,10 @@ const scenarious = {
     )
   },
   discardOrder: async ctx => {
-    await session.checkout(ctx.from.id)
     const places = await placesModel.find({})
+    const walletId = await session.getEntity(ctx.from.id, 'wallet')
+    busyWallets.splice(busyWallets.indexOf(walletId), 1)
+    await session.checkout(ctx.from.id)
     await ctx.editMessageText(papyrus.orderDiscarded)
     return await ctx.reply(papyrus.initialSecond,
       Markup.inlineKeyboard(inlineKeyboards.initial(places))
@@ -148,6 +152,10 @@ const scenarious = {
       }
     })
     const wallet = easypay.data.wallets[Math.floor(Math.random() * easypay.data.wallets.length)]
+    if (easypay.data.wallets.length === busyWallets.length) {
+      return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
+    }
+    busyWallets.push(wallet.id)
     await session.update(ctx.from.id, 'oldBalance', wallet.balance)
     await session.update(ctx.from.id, 'wallet', wallet.id)
     return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
@@ -194,6 +202,7 @@ const scenarious = {
     if (product === null) {
       return;
     }
+    busyWallets.splice(busyWallets.indexOf(walletId), 1)
     const user = await usersModel.findOne({ userId: ctx.from.id })
     const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
     if (user.inviterId) {
@@ -221,7 +230,11 @@ const scenarious = {
   adminMakeMailing: async message => {
     const users = await usersModel.find({})
     return users.forEach(async user => {
-      await bot.telegram.sendMessage(user.userId, message)
+      try {
+        await bot.telegram.sendMessage(user.userId, message)
+      } catch (err) {
+        console.log(`User ${user.userId} is blocked bot.`);
+      }
     })
   }
 }
