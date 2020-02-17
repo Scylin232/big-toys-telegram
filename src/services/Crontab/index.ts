@@ -10,12 +10,16 @@ dotenv.config()
 
 const scheduler = () => {
   schedule.scheduleJob('*/10 * * * *', async () => {
-    const easyPayUrl = await settingsModel.findById('5e4946e00bf3af40d4150070')
-    axios.get(easyPayUrl.value).then(res => {
-      easyPayData = res.data
-      counter += 1
-      console.log('Completed: ', counter)
-    })
+    try {
+      const easyPayUrl = await settingsModel.findById('5e4946e00bf3af40d4150070')
+      axios.get(easyPayUrl.value).then(res => {
+        easyPayData = res.data
+        counter += 1
+        console.log('Completed: ', counter)
+      })
+    } catch(err) {
+      console.log('Server is not responding.');
+    }
   })
 }
 
