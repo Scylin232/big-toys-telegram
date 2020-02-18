@@ -10,13 +10,13 @@ dotenv.config()
 
 const scheduler = () => {
   schedule.scheduleJob('*/10 * * * *', async () => {
-    const easyPayUrl = await settingsModel.findById('5e4946e00bf3af40d4150070')
-    axios.get(easyPayUrl.value).then(res => {
+    const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
+    axios.get(easyPayUrl.data).then(res => {
       easyPayData = res.data
       counter += 1
       console.log('Completed: ', counter)
     }).catch(err => {
-      console.log('Server is not responding')
+      console.log('Not ready. Most likely you do it at night, wait until the morning. EasyPay services cannot finish work now.')
     })
   })
 }

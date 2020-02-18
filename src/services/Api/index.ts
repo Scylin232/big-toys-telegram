@@ -1,4 +1,5 @@
 import uuidv4 from 'uuid/v4'
+import axios from 'axios'
 import cors from 'cors'
 import express from 'express'
 import { placesModel, productsModel, usersModel, historyModel, promocodeModel, settingsModel } from '../MongoDB'
@@ -124,8 +125,8 @@ app.post('/mailing', async (req, res) => {
 })
 
 app.get('/easyPayApiUrl', async (req, res) => {
-  const easyPayUrl = await settingsModel.findById('5e4946e00bf3af40d4150070')
-  return await res.status(200).send(easyPayUrl.value)
+  const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
+  return await res.status(200).send(easyPayUrl.data)
 })
 
 let userToken;
