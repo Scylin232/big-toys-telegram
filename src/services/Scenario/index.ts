@@ -139,7 +139,10 @@ const scenarious = {
         .extra()
     )
   },
-  payProduct: ctx => async area => { 
+  payProduct: ctx => async area => {
+    if (easyPayData.pageId === null) {
+      return await ctx.answerCbQuery('На данный момент - сервисы EasyPay не доступны. Попробуйте позже!')
+    }
     const productId = await session.getEntity(ctx.from.id, 'product')
     const product = await productsModel.findById(productId)
     const easypay = await axios({

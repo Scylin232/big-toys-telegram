@@ -10,48 +10,56 @@ bot.start(async (ctx: any) => {
     }
     await anthology.get('initial')(ctx)
   } catch (err) {
-    console.error(err)
+    console.log(err)
   }
 })
 
 bot.on('message', async ctx => {
-  const userMessage = ctx.message.text
-  const scope = await session.getEntity(ctx.from.id, 'scope')
-  if (scope === 'enterPromocode') {
-    return await anthology.get('applyPromocode')(ctx)(userMessage)
-  }
-  if (Object.values(availableScenarious).indexOf(userMessage) > -1) {
-    for (const prop in availableScenarious) {
-        if (availableScenarious.hasOwnProperty(prop)) {
-          if (availableScenarious[prop] === userMessage) {
-            return await anthology.get(prop)(ctx)
-          }
-        }
+  try {
+    const userMessage = ctx.message.text
+    const scope = await session.getEntity(ctx.from.id, 'scope')
+    if (scope === 'enterPromocode') {
+      return await anthology.get('applyPromocode')(ctx)(userMessage)
     }
+    if (Object.values(availableScenarious).indexOf(userMessage) > -1) {
+      for (const prop in availableScenarious) {
+          if (availableScenarious.hasOwnProperty(prop)) {
+            if (availableScenarious[prop] === userMessage) {
+              return await anthology.get(prop)(ctx)
+            }
+          }
+      }
+    }
+  } catch(err) {
+    console.log('An error occured: ', err.message)
   }
 })
 
 bot.on('callback_query', async ctx => {
-  const callbackQuery = ctx.callbackQuery.data
-  if (callbackQuery.startsWith('payProduct:')) {
-    return await anthology.get('payProduct')(ctx)(callbackQuery.substr(11))
-  }
-  if (callbackQuery.startsWith('displayOrderDetails:')) {
-    return await anthology.get('displayOrderDetails')(ctx)(callbackQuery.substr(20))
-  }
-  if (callbackQuery.startsWith('getAreasByProduct:')) {
-    return await anthology.get('getAreasByProduct')(ctx)(callbackQuery.substr(18))
-  }
-  if (callbackQuery.startsWith('getProductsByCity:')) {
-    return await anthology.get('getProductsByCity')(ctx)(callbackQuery.substr(18))
-  }
-  if (Object.values(availableScenarious).indexOf(callbackQuery) > -1) {
-    for (const prop in availableScenarious) {
-        if (availableScenarious.hasOwnProperty(prop)) {
-          if (availableScenarious[prop] === callbackQuery) {
-            return await anthology.get(prop)(ctx)
-          }
-        }
+  try {
+    const callbackQuery = ctx.callbackQuery.data
+    if (callbackQuery.startsWith('payProduct:')) {
+      return await anthology.get('payProduct')(ctx)(callbackQuery.substr(11))
     }
+    if (callbackQuery.startsWith('displayOrderDetails:')) {
+      return await anthology.get('displayOrderDetails')(ctx)(callbackQuery.substr(20))
+    }
+    if (callbackQuery.startsWith('getAreasByProduct:')) {
+      return await anthology.get('getAreasByProduct')(ctx)(callbackQuery.substr(18))
+    }
+    if (callbackQuery.startsWith('getProductsByCity:')) {
+      return await anthology.get('getProductsByCity')(ctx)(callbackQuery.substr(18))
+    }
+    if (Object.values(availableScenarious).indexOf(callbackQuery) > -1) {
+      for (const prop in availableScenarious) {
+          if (availableScenarious.hasOwnProperty(prop)) {
+            if (availableScenarious[prop] === callbackQuery) {
+              return await anthology.get(prop)(ctx)
+            }
+          }
+      }
+    }
+  } catch(err) {
+    console.log('An error occured: ', err.message)
   }
 })
