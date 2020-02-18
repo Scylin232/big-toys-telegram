@@ -10,7 +10,7 @@ bot.start(async (ctx: any) => {
     }
     await anthology.get('initial')(ctx)
   } catch (err) {
-    console.log(err)
+    console.log('')
   }
 })
 
@@ -31,7 +31,7 @@ bot.on('message', async ctx => {
       }
     }
   } catch(err) {
-    console.log('An error occured: ', err.message)
+    console.log('')
   }
 })
 
@@ -60,6 +60,6 @@ bot.on('callback_query', async ctx => {
       }
     }
   } catch(err) {
-    console.log('An error occured: ', err.message)
+    console.log('')
   }
 })
