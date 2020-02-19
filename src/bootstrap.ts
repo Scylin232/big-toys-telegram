@@ -1,6 +1,5 @@
 import Telegraf from 'telegraf'
 import dotenv from 'dotenv'
-import { scheduler } from './services/Crontab'
 import { app } from './services/Api'
 
 dotenv.config()
@@ -15,7 +14,5 @@ try {
 } catch (err) {
   console.log(err)
 }
-
-scheduler()
 
 export { bot }

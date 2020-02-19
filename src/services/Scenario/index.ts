@@ -2,7 +2,6 @@ import Markup from 'telegraf/markup'
 import axios from 'axios'
 import inlineKeyboards from '../Keyboards/inlineKeyboard'
 import papyrus from '../../stubs/papyrus'
-import { easyPayData } from '../Crontab'
 import { availableScenarious } from '../../helpers/markup'
 import { usersModel, placesModel, productsModel, historyModel, promocodeModel } from '../MongoDB'
 import { session } from '../Session'
@@ -24,18 +23,6 @@ const scenarious = {
         .resize()
         .extra()
     )
-  },
-  coshInfo: async ctx => {
-    const response = await axios({
-      url: 'https://api.easypay.ua/api/wallets/get',
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${easyPayData.bearerToken}`,
-        'AppId': easyPayData.appId,
-        'PageId': easyPayData.pageId
-      }
-    })
-    return await ctx.reply(papyrus.wallet(response.data.wallets));
   },
   myProfile: async ctx => {
     const user = await usersModel.findOne({ userId: ctx.from.id })
@@ -140,22 +127,12 @@ const scenarious = {
     )
   },
   payProduct: ctx => async area => {
-    if (easyPayData.pageId === null) {
-      return await ctx.answerCbQuery('На данный момент - сервисы EasyPay не доступны. Попробуйте позже!')
-    }
     const productId = await session.getEntity(ctx.from.id, 'product')
     const product = await productsModel.findById(productId)
-    const easypay = await axios({
-      url: 'https://api.easypay.ua/api/wallets/get',
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${easyPayData.bearerToken}`,
-        'AppId': easyPayData.appId,
-        'PageId': easyPayData.pageId
-      }
-    })
-    const wallet = easypay.data.wallets[Math.floor(Math.random() * easypay.data.wallets.length)]
-    if (easypay.data.wallets.length === busyWallets.length) {
+    const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
+    const easypay = await axios.get(`${easyPayUrl.data}/wallets`)
+    const wallet = easypay.data[Math.floor(Math.random() * easypay.data.length)]
+    if (easypay.data.length === busyWallets.length) {
       return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
     }
     busyWallets.push(wallet.id)
@@ -189,17 +166,10 @@ const scenarious = {
     const productId = await session.getEntity(ctx.from.id, 'product')
     const oldBalance = await session.getEntity(ctx.from.id, 'oldBalance')
     const walletId = await session.getEntity(ctx.from.id, 'wallet')
-    const easypay = await axios({
-      url: `https://api.easypay.ua/api/wallets/get/${walletId}`,
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${easyPayData.bearerToken}`,
-        'AppId': easyPayData.appId,
-        'PageId': easyPayData.pageId
-      }
-    })
+    const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
+    const easypay = await axios.get(`${easyPayUrl.data}/getWalletById`, { params: { walletId } })
     const product = await productsModel.findById(productId)
-    if (easypay.data.wallets[0].balance < Number(oldBalance) + Number(product.price) ) {
+    if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
       return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
     }
     if (product === null) {

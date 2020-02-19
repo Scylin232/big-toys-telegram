@@ -1,6 +1,5 @@
 const availableScenarious = {
   initial: 'initial',
-  coshInfo: '/cosh',
   myProfile: 'myProfile',
   information: 'information',
   back: 'back',

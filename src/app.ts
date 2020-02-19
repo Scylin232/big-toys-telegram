@@ -10,7 +10,7 @@ bot.start(async (ctx: any) => {
     }
     await anthology.get('initial')(ctx)
   } catch (err) {
-    console.log('')
+    console.log(err.message)
   }
 })
 
@@ -31,7 +31,7 @@ bot.on('message', async ctx => {
       }
     }
   } catch(err) {
-    console.log('')
+    console.log(err.message)
   }
 })
 
@@ -60,6 +60,6 @@ bot.on('callback_query', async ctx => {
       }
     }
   } catch(err) {
-    console.log('')
+    console.log(err.message)
   }
 })
