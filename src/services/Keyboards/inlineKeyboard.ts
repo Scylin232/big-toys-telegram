@@ -40,26 +40,26 @@ export default {
     })
     return keyboard
   },
-  areas: (areas) => {
+  areas: (areas, productId) => {
     const keyboard = [[{ text: '⚫ Главное меню', callback_data: 'back' }]]
     areas.forEach(area => {
-      keyboard.unshift([{ text: area, callback_data: `displayOrderDetails:${area}` }])
+      keyboard.unshift([{ text: area, callback_data: `dO:${area}:${productId}` }])
     })
     return keyboard
   },
-  paymentMethod: (price, area, isBonusBalanceMatch, bonusBalance) => {
+  paymentMethod: (price, area, isBonusBalanceMatch, bonusBalance, productId) => {
     let keyboard = [
-      [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `payProduct:${area}` }, { text: `✖ Отменить заказ`, callback_data: 'discardOrder' }],
+      [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `pP:${area}:${productId}` }, { text: `✖ Отменить заказ`, callback_data: `diO:NoWalletId` }],
     ]
     if (isBonusBalanceMatch) {
       keyboard = [
-        [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `payProduct:${area}` }, { text: `Купить за бонусы (${bonusBalance} грн)`, callback_data: `payProductByBonuses` }],
-        [{ text: `✖ Отменить заказ`, callback_data: 'discardOrder' }]
+        [{ text: `🔷 EasyPay (${price} грн)`, callback_data: `pP:${area}:${productId}` }, { text: `Купить за бонусы (${bonusBalance} грн)`, callback_data: `pPBB:${productId}` }],
+        [{ text: `✖ Отменить заказ`, callback_data: `diO:NoWalletId` }]
       ]
     }
     return keyboard
   },
-  payProduct: [
-    [{ text: '✔ Проверить оплату', callback_data: 'checkPayment' }, { text: '✖ Отмена', callback_data: 'discardOrder' }]
+  payProduct: (oldBalance, walletId, productId) => [
+    [{ text: '✔ Проверить оплату', callback_data: `Z:${oldBalance}:${walletId}:${productId}` }, { text: '✖ Отмена', callback_data: `diO:${walletId}` }]
   ]
 }

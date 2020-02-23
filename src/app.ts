@@ -1,7 +1,6 @@
 import anthology from './services/Scenario'
 import { availableScenarious } from './helpers/markup'
 import { bot } from './bootstrap'
-import { session } from './services/Session'
 
 bot.start(async (ctx: any) => {
   try {
@@ -17,9 +16,8 @@ bot.start(async (ctx: any) => {
 bot.on('message', async ctx => {
   try {
     const userMessage = ctx.message.text
-    const scope = await session.getEntity(ctx.from.id, 'scope')
-    if (scope === 'enterPromocode') {
-      return await anthology.get('applyPromocode')(ctx)(userMessage)
+    if (userMessage.toLowerCase().startsWith('промокод:')) {
+      return await anthology.get('applyPromocode')(ctx)(userMessage.substr(9).trim())
     }
     if (Object.values(availableScenarious).indexOf(userMessage) > -1) {
       for (const prop in availableScenarious) {
@@ -38,11 +36,20 @@ bot.on('message', async ctx => {
 bot.on('callback_query', async ctx => {
   try {
     const callbackQuery = ctx.callbackQuery.data
-    if (callbackQuery.startsWith('payProduct:')) {
-      return await anthology.get('payProduct')(ctx)(callbackQuery.substr(11))
+    if (callbackQuery.startsWith('diO:')) {
+      return await anthology.get('discardOrder')(ctx)(callbackQuery.substr(4))
     }
-    if (callbackQuery.startsWith('displayOrderDetails:')) {
-      return await anthology.get('displayOrderDetails')(ctx)(callbackQuery.substr(20))
+    if (callbackQuery.startsWith('Z:')) {
+      return await anthology.get('checkPayment')(ctx)(callbackQuery.substr(2))
+    }
+    if (callbackQuery.startsWith('pPBB:')) {
+      return await anthology.get('payProductByBonuses')(ctx)(callbackQuery.substr(5))
+    }
+    if (callbackQuery.startsWith('pP:')) {
+      return await anthology.get('payProduct')(ctx)(callbackQuery.substr(3))
+    }
+    if (callbackQuery.startsWith('dO:')) {
+      return await anthology.get('displayOrderDetails')(ctx)(callbackQuery.substr(3))
     }
     if (callbackQuery.startsWith('getAreasByProduct:')) {
       return await anthology.get('getAreasByProduct')(ctx)(callbackQuery.substr(18))

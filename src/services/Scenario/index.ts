@@ -4,7 +4,6 @@ import inlineKeyboards from '../Keyboards/inlineKeyboard'
 import papyrus from '../../stubs/papyrus'
 import { availableScenarious } from '../../helpers/markup'
 import { usersModel, placesModel, productsModel, historyModel, promocodeModel } from '../MongoDB'
-import { session } from '../Session'
 import { bot } from '../../bootstrap'
 
 const busyWallets = []
@@ -16,7 +15,6 @@ const scenarious = {
     if (user === null) {
       await usersModel.create({ userId: ctx.from.id, username: ctx.from.username, registrationDate: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''), countOfPurchases: 0, referralFriends: [], bonusBalance: 0, historyOfPurchases: [] })
     }
-    await session.init(ctx.from.id)
     await ctx.reply(papyrus.initial)
     return await ctx.reply(papyrus.initialSecond, 
       Markup.inlineKeyboard(inlineKeyboards.initial(places))
@@ -41,7 +39,6 @@ const scenarious = {
   },
   back: async ctx => {
     const places = await placesModel.find({})
-    await session.update(ctx.from.id, 'scope', null)
     return await ctx.editMessageText(papyrus.initialSecond,
       Markup.inlineKeyboard(inlineKeyboards.initial(places))
         .resize()
@@ -57,12 +54,7 @@ const scenarious = {
     )
   },
   enterPromocode: async ctx => {
-    await session.update(ctx.from.id, 'scope', 'enterPromocode')
-    return await ctx.reply(papyrus.enterPromocode,
-      Markup.inlineKeyboard(inlineKeyboards.back)
-        .resize()
-        .extra()
-    )
+    return await ctx.reply(papyrus.enterPromocode)
   },
   historyOfPurchases: async ctx => {
     const history = await historyModel.find({ buyerId: ctx.from.id })
@@ -77,7 +69,6 @@ const scenarious = {
     if (promo) {
       await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { bonusBalance: promo.increaseValue } })
       await promocodeModel.deleteOne({ _id: promo._id })
-      await session.update(ctx.from.id, 'scope', null)
       return await ctx.reply(papyrus.promocodeUsed(promo.increaseValue))
     }
     return await ctx.reply(papyrus.promocodeDoesNotExist)
@@ -93,15 +84,14 @@ const scenarious = {
   },
   getAreasByProduct: ctx => async productId => {
     const product = await productsModel.findById(productId)
-    await session.update(ctx.from.id, 'product', productId)
     return await ctx.editMessageText(papyrus.getAreasByProduct,
-      Markup.inlineKeyboard(inlineKeyboards.areas(product.area))
+      Markup.inlineKeyboard(inlineKeyboards.areas(product.area, productId))
         .resize()
         .extra()
     )
   },
-  displayOrderDetails: ctx => async area => {
-    const productId = await session.getEntity(ctx.from.id, 'product')
+  displayOrderDetails: ctx => async rawAreaData => {
+    const [area, productId] = rawAreaData.split(':')
     const product = await productsModel.findById(productId)
     const user = await usersModel.findOne({ userId: ctx.from.id })
     let isBonusBalanceMatch = false
@@ -109,16 +99,16 @@ const scenarious = {
       isBonusBalanceMatch = true
     }
     return await ctx.editMessageText(papyrus.displayProductDetails(product.title, product.description, product.city, area),
-      Markup.inlineKeyboard(inlineKeyboards.paymentMethod(product.price, area, isBonusBalanceMatch, user.bonusBalance))
+      Markup.inlineKeyboard(inlineKeyboards.paymentMethod(product.price, area, isBonusBalanceMatch, user.bonusBalance, productId))
         .resize()
         .extra()
     )
   },
-  discardOrder: async ctx => {
+  discardOrder: ctx => async walletId => {
     const places = await placesModel.find({})
-    const walletId = await session.getEntity(ctx.from.id, 'wallet')
-    busyWallets.splice(busyWallets.indexOf(walletId), 1)
-    await session.checkout(ctx.from.id)
+    if (walletId !== 'NoWalletId') {
+      busyWallets.splice(busyWallets.indexOf(walletId), 1)
+    }
     await ctx.editMessageText(papyrus.orderDiscarded)
     return await ctx.reply(papyrus.initialSecond,
       Markup.inlineKeyboard(inlineKeyboards.initial(places))
@@ -126,8 +116,8 @@ const scenarious = {
         .extra()
     )
   },
-  payProduct: ctx => async area => {
-    const productId = await session.getEntity(ctx.from.id, 'product')
+  payProduct: ctx => async rawAreaData => {
+    const [area, productId] = rawAreaData.split(':')
     const product = await productsModel.findById(productId)
     const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
     const easypay = await axios.get(`${easyPayUrl.data}/wallets`)
@@ -136,16 +126,13 @@ const scenarious = {
       return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
     }
     busyWallets.push(wallet.id)
-    await session.update(ctx.from.id, 'oldBalance', wallet.balance)
-    await session.update(ctx.from.id, 'wallet', wallet.id)
     return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
-      Markup.inlineKeyboard(inlineKeyboards.payProduct)
+      Markup.inlineKeyboard(inlineKeyboards.payProduct(wallet.balance, wallet.id, productId))
         .resize()
         .extra()
     )
   },
-  payProductByBonuses: async ctx => {
-    const productId = await session.getEntity(ctx.from.id, 'product')
+  payProductByBonuses: ctx => async productId => {
     const product = await productsModel.findById(productId)
     if (product === null) {
       return;
@@ -154,7 +141,6 @@ const scenarious = {
     await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1, bonusBalance: Number(-Math.abs(product.price)) } })
     await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
     await productsModel.findByIdAndUpdate(productId, { stock: product.stock.filter(elem => elem !== stock) })
-    await session.checkout(ctx.from.id)
     await ctx.editMessageText(papyrus.orderData(product.title, stock))
     return await ctx.reply(papyrus.succesfulPayment,
       Markup.inlineKeyboard(inlineKeyboards.secondBack)
@@ -162,10 +148,8 @@ const scenarious = {
         .extra()
     )
   },
-  checkPayment: async ctx => {
-    const productId = await session.getEntity(ctx.from.id, 'product')
-    const oldBalance = await session.getEntity(ctx.from.id, 'oldBalance')
-    const walletId = await session.getEntity(ctx.from.id, 'wallet')
+  checkPayment: ctx => async rawProductData => {
+    const [oldBalance, walletId, productId] = rawProductData.split(':')
     const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
     const easypay = await axios.get(`${easyPayUrl.data}/getWalletById`, { params: { walletId } })
     const product = await productsModel.findById(productId)
@@ -184,7 +168,6 @@ const scenarious = {
     await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1 } })
     await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
     await productsModel.findByIdAndUpdate(productId, { stock: product.stock.filter(elem => elem !== stock) })
-    await session.checkout(ctx.from.id)
     await ctx.editMessageText(papyrus.orderData(product.title, stock))
     return await ctx.reply(papyrus.succesfulPayment,
       Markup.inlineKeyboard(inlineKeyboards.secondBack)
