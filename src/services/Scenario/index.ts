@@ -6,7 +6,7 @@ import { availableScenarious } from '../../helpers/markup'
 import { usersModel, placesModel, productsModel, historyModel, promocodeModel } from '../MongoDB'
 import { bot } from '../../bootstrap'
 
-const busyWallets = []
+// const busyWallets = []
 
 const scenarious = {
   initial: async ctx => {
@@ -106,9 +106,9 @@ const scenarious = {
   },
   discardOrder: ctx => async walletId => {
     const places = await placesModel.find({})
-    if (walletId !== 'NoWalletId') {
-      busyWallets.splice(busyWallets.indexOf(walletId), 1)
-    }
+    // if (walletId !== 'NoWalletId') {
+    //   busyWallets.splice(busyWallets.indexOf(walletId), 1)
+    // }
     await ctx.editMessageText(papyrus.orderDiscarded)
     return await ctx.reply(papyrus.initialSecond,
       Markup.inlineKeyboard(inlineKeyboards.initial(places))
@@ -122,10 +122,10 @@ const scenarious = {
     const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
     const easypay = await axios.get(`${easyPayUrl.data}/wallets`)
     const wallet = easypay.data[Math.floor(Math.random() * easypay.data.length)]
-    if (easypay.data.length === busyWallets.length) {
-      return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
-    }
-    busyWallets.push(wallet.id)
+    // if (easypay.data.length === busyWallets.length) {
+    //   return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
+    // }
+    // busyWallets.push(wallet.id)
     return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
       Markup.inlineKeyboard(inlineKeyboards.payProduct(wallet.balance, wallet.id, productId))
         .resize()
@@ -159,7 +159,7 @@ const scenarious = {
     if (product === null) {
       return;
     }
-    busyWallets.splice(busyWallets.indexOf(walletId), 1)
+    // busyWallets.splice(busyWallets.indexOf(walletId), 1)
     const user = await usersModel.findOne({ userId: ctx.from.id })
     const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
     if (user.inviterId) {
