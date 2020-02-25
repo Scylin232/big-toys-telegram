@@ -150,10 +150,12 @@ const scenarious = {
   },
   checkPayment: ctx => async rawProductData => {
     const [oldBalance, walletId, productId] = rawProductData.split(':')
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] })
     const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
     const easypay = await axios.get(`${easyPayUrl.data}/getWalletById`, { params: { walletId } })
     const product = await productsModel.findById(productId)
     if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
+      await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId) })
       return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
     }
     if (product === null) {
