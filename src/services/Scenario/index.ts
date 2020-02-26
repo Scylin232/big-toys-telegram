@@ -119,8 +119,7 @@ const scenarious = {
   payProduct: ctx => async rawAreaData => {
     const [area, productId] = rawAreaData.split(':')
     const product = await productsModel.findById(productId)
-    const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
-    const easypay = await axios.get(`${easyPayUrl.data}/wallets`)
+    const easypay = await axios.get(`${process.env.EASYPAY_URL}/wallets`)
     const wallet = easypay.data[Math.floor(Math.random() * easypay.data.length)]
     // if (easypay.data.length === busyWallets.length) {
     //   return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
@@ -151,8 +150,7 @@ const scenarious = {
   checkPayment: ctx => async rawProductData => {
     const [oldBalance, walletId, productId] = rawProductData.split(':')
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] })
-    const easyPayUrl = await axios.get('https://big-toys-easypay-returner.herokuapp.com/')
-    const easypay = await axios.get(`${easyPayUrl.data}/getWalletById`, { params: { walletId } })
+    const easypay = await axios.get(`${process.env.EASYPAY_URL}/getWalletById`, { params: { walletId } })
     const product = await productsModel.findById(productId)
     if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
       await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId) })
