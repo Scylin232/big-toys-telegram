@@ -126,7 +126,7 @@ app.post('/mailing', async (req, res) => {
 })
 
 app.get('/easyPayApiUrl', async (req, res) => {
-  return await res.status(200).send(process.env.EASYPAY_URL)
+  return await res.status(200).send(process.env.PAYMENT_SERVER_URL)
 })
 
 let userToken;

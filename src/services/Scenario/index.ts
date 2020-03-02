@@ -116,20 +116,30 @@ const scenarious = {
         .extra()
     )
   },
+  // if (easypay.data.length === busyWallets.length) {
+  //   return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
+  // }
+  // busyWallets.push(wallet.id)
   payProduct: ctx => async rawAreaData => {
-    const [area, productId] = rawAreaData.split(':')
+    const [area, productId, paymentMethod] = rawAreaData.split(':')
     const product = await productsModel.findById(productId)
-    const easypay = await axios.get(`${process.env.EASYPAY_URL}/wallets`)
-    const wallet = easypay.data[Math.floor(Math.random() * easypay.data.length)]
-    // if (easypay.data.length === busyWallets.length) {
-    //   return await ctx.answerCbQuery('На данный момент - все кошельки заняты! Попробуйте позже!')
-    // }
-    // busyWallets.push(wallet.id)
-    return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
-      Markup.inlineKeyboard(inlineKeyboards.payProduct(wallet.balance, wallet.id, productId))
-        .resize()
-        .extra()
-    )
+    if (paymentMethod === 'gM') {
+      const globalMoney = await axios.get(`${process.env.PAYMENT_SERVER_URL}/walletGlobalMoney`)
+      return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, globalMoney.data.walletId, product.price),
+        Markup.inlineKeyboard(inlineKeyboards.payProduct(Number(globalMoney.data.walletStatus.amount), globalMoney.data.walletId, productId, paymentMethod))
+          .resize()
+          .extra()
+      )
+    }
+    if (paymentMethod === 'eP') {
+      const easypay = await axios.get(`${process.env.PAYMENT_SERVER_URL}/wallets`)
+      const wallet = easypay.data[Math.floor(Math.random() * easypay.data.length)]
+      return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
+        Markup.inlineKeyboard(inlineKeyboards.payProduct(wallet.balance, wallet.id, productId, paymentMethod))
+          .resize()
+          .extra()
+      )
+    }    
   },
   payProductByBonuses: ctx => async productId => {
     const product = await productsModel.findById(productId)
@@ -148,13 +158,22 @@ const scenarious = {
     )
   },
   checkPayment: ctx => async rawProductData => {
-    const [oldBalance, walletId, productId] = rawProductData.split(':')
+    const [oldBalance, walletId, productId, paymentMethod] = rawProductData.split(':')
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] })
-    const easypay = await axios.get(`${process.env.EASYPAY_URL}/getWalletById`, { params: { walletId } })
     const product = await productsModel.findById(productId)
-    if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
-      await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId) })
-      return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
+    if (paymentMethod === 'gM') {
+      const globalMoney = await axios.get(`${process.env.PAYMENT_SERVER_URL}/walletGlobalMoney`)
+      if (Number(globalMoney.data.walletStatus.amount) < Number(oldBalance) + Number(product.price)) {
+        await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
+        return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
+      }
+    }
+    if (paymentMethod === 'eP') {
+      const easypay = await axios.get(`${process.env.PAYMENT_SERVER_URL}/getWalletById`, { params: { walletId } })
+      if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
+        await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
+        return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
+      }
     }
     if (product === null) {
       return;
