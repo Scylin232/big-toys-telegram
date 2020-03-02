@@ -163,7 +163,7 @@ const scenarious = {
     const product = await productsModel.findById(productId)
     if (paymentMethod === 'gM') {
       const globalMoney = await axios.get(`${process.env.PAYMENT_SERVER_URL}/walletGlobalMoney`)
-      if (Number(globalMoney.data.walletStatus.amount) < Number(oldBalance) + Number(product.price)) {
+      if (Number(globalMoney.data.walletStatus.amount.slice(0,-2)) < Number(oldBalance.slice(0,-2)) + Number(product.price)) {
         await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
         return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
       }
