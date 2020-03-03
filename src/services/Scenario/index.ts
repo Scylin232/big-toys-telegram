@@ -124,7 +124,7 @@ const scenarious = {
     const [area, productId, paymentMethod] = rawAreaData.split(':')
     const product = await productsModel.findById(productId)
     if (paymentMethod === 'gM') {
-      const globalMoney = await axios.get(`${process.env.PAYMENT_SERVER_URL}/walletGlobalMoney`)
+      const globalMoney = await axios.get(`${process.env.EASYPAY_URL}/walletGlobalMoney`)
       return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, globalMoney.data.walletId, product.price),
         Markup.inlineKeyboard(inlineKeyboards.payProduct(Number(globalMoney.data.walletStatus.amount), globalMoney.data.walletId, productId, paymentMethod))
           .resize()
@@ -132,7 +132,7 @@ const scenarious = {
       )
     }
     if (paymentMethod === 'eP') {
-      const easypay = await axios.get(`${process.env.PAYMENT_SERVER_URL}/wallets`)
+      const easypay = await axios.get(`${process.env.EASYPAY_URL}/wallets`)
       const wallet = easypay.data[Math.floor(Math.random() * easypay.data.length)]
       return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, wallet.number, product.price),
         Markup.inlineKeyboard(inlineKeyboards.payProduct(wallet.balance, wallet.id, productId, paymentMethod))
@@ -162,14 +162,14 @@ const scenarious = {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] })
     const product = await productsModel.findById(productId)
     if (paymentMethod === 'gM') {
-      const globalMoney = await axios.get(`${process.env.PAYMENT_SERVER_URL}/walletGlobalMoney`)
+      const globalMoney = await axios.get(`${process.env.EASYPAY_URL}/walletGlobalMoney`)
       if (Number(globalMoney.data.walletStatus.amount.slice(0,-2)) < Number(oldBalance.slice(0,-2)) + Number(product.price)) {
         await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
         return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
       }
     }
     if (paymentMethod === 'eP') {
-      const easypay = await axios.get(`${process.env.PAYMENT_SERVER_URL}/getWalletById`, { params: { walletId } })
+      const easypay = await axios.get(`${process.env.EASYPAY_URL}/getWalletById`, { params: { walletId } })
       if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
         await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
         return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
