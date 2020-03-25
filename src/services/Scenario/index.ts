@@ -211,6 +211,13 @@ const scenarious = {
         console.log(`User ${user.userId} is blocked bot.`);
       }
     })
+  },
+  rejectRequest: async ctx => {
+    return await ctx.reply(papyrus.rejectRequest)
+  },
+  getServerTime: async ctx => {
+    const date = new Date()
+    return await ctx.reply(`${date.getUTCHours()} ${date.getUTCMinutes()}`)
   }
 }
 

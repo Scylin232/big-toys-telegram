@@ -1,6 +1,7 @@
 import anthology from './services/Scenario'
 import { availableScenarious } from './helpers/markup'
 import { bot } from './bootstrap'
+import { inBlockDate } from './utils'
 
 bot.start(async (ctx: any) => {
   try {
@@ -16,6 +17,9 @@ bot.start(async (ctx: any) => {
 bot.on('message', async ctx => {
   try {
     const userMessage = ctx.message.text
+    if(inBlockDate()) {
+      return await anthology.get('rejectRequest')(ctx)
+    }
     if (userMessage.toLowerCase().startsWith('промокод:')) {
       return await anthology.get('applyPromocode')(ctx)(userMessage.substr(9).trim())
     }
@@ -36,6 +40,10 @@ bot.on('message', async ctx => {
 bot.on('callback_query', async ctx => {
   try {
     const callbackQuery = ctx.callbackQuery.data
+    if(inBlockDate()) {
+      await ctx.answerCbQuery()
+      return await anthology.get('rejectRequest')(ctx)
+    }
     if (callbackQuery.startsWith('diO:')) {
       return await anthology.get('discardOrder')(ctx)(callbackQuery.substr(4))
     }

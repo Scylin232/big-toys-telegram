@@ -15,7 +15,9 @@ const availableScenarious = {
   checkPayment: 'checkPayment',
   addReferral: 'addReferral',
   payProductByBonuses: 'payProductByBonuses',
-  adminMakeMailing: 'adminMakeMailing'
+  adminMakeMailing: 'adminMakeMailing',
+  rejectRequest: 'rejectRequest',
+  getServerTime: 'getServerTime',
 }
 
 export { availableScenarious }

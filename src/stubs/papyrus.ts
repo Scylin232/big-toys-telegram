@@ -61,5 +61,6 @@ export default {
 ➖ПОСЛЕ ПОПОЛНЕНИЯ КОШЕЛЬКА ПОДОЖДИТЕ 1-2 МИН И НАЖМИТЕ 'ПРОВЕРИТЬ ОПЛАТУ'`,
   orderData: (title, response) => `Данные вашего заказа (${title}):\n\n${String(response).trim()}`,
   succesfulPayment: '✔ Благодарим за покупку!\nДля продолжения работы с ботом введите - /start',
-  promocodeUsed: (increaseValue: number) => `✅Промокод применён! На ваш баланс поступило ${increaseValue} грн.`
+  promocodeUsed: (increaseValue: number) => `✅Промокод применён! На ваш баланс поступило ${increaseValue} грн.`,
+  rejectRequest: '⚠ В ближайшее полчаса мы не принимаем заказы, пожалуйста, попробуйте позже.'
 }
