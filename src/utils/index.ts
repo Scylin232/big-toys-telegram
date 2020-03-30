@@ -4,7 +4,7 @@ const chunks = (arr, size = 2) => {
 
 const inBlockDate = () => {
   const date = new Date()
-  if (date.getUTCHours() === 22 && date.getUTCMinutes() <= 40) {
+  if (date.getUTCHours() === 21 && date.getUTCMinutes() <= 40) {
     return true
   }
   return false
