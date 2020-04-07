@@ -7,6 +7,7 @@ import { usersModel, placesModel, productsModel, historyModel, promocodeModel } 
 import { bot } from '../../bootstrap'
 
 // const busyWallets = []
+let blockedButton = false;
 
 const scenarious = {
   initial: async ctx => {
@@ -125,8 +126,8 @@ const scenarious = {
     const product = await productsModel.findById(productId)
     if (paymentMethod === 'gM') {
       const globalMoney = await axios.get(`${process.env.EASYPAY_URL}/walletGlobalMoney`)
-      return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, globalMoney.data.walletId, product.price),
-        Markup.inlineKeyboard(inlineKeyboards.payProduct(Number(globalMoney.data.walletStatus.amount), globalMoney.data.walletId, productId, paymentMethod))
+      return await ctx.editMessageText(papyrus.payProduct(product.title, product.description, product.city, area, globalMoney.data.id, product.price),
+        Markup.inlineKeyboard(inlineKeyboards.payProduct(Number(globalMoney.data.balance), globalMoney.data.id, productId, paymentMethod))
           .resize()
           .extra()
       )
@@ -142,29 +143,38 @@ const scenarious = {
     }    
   },
   payProductByBonuses: ctx => async productId => {
+    // const product = await productsModel.findById(productId)
+    // if (product === null) {
+    //   return;
+    // }
+    // const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
+    // await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1, bonusBalance: Number(-Math.abs(product.price)) } })
+    // await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
+    // await productsModel.findByIdAndUpdate(productId, { stock: product.stock.filter(elem => elem !== stock) })
+    // await ctx.editMessageText(papyrus.orderData(product.title, stock))
+    // return await ctx.reply(papyrus.succesfulPayment,
+    //   Markup.inlineKeyboard(inlineKeyboards.secondBack)
+    //     .resize()
+    //     .extra()
+    // )
+  },
+  checkPayment: ctx => async rawProductData => {
+    if (blockedButton) {
+      blockedButton = false;
+      return;
+    }
+    blockedButton = true
+    const [oldBalance, walletId, productId, paymentMethod] = rawProductData.split(':')
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] })
     const product = await productsModel.findById(productId)
     if (product === null) {
       return;
     }
-    const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
-    await usersModel.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { countOfPurchases: 1, bonusBalance: Number(-Math.abs(product.price)) } })
-    await historyModel.create({ response: stock, buyerId: ctx.from.id, buyerUsername: ctx.from.username, price: product.price, date: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') })
-    await productsModel.findByIdAndUpdate(productId, { stock: product.stock.filter(elem => elem !== stock) })
-    await ctx.editMessageText(papyrus.orderData(product.title, stock))
-    return await ctx.reply(papyrus.succesfulPayment,
-      Markup.inlineKeyboard(inlineKeyboards.secondBack)
-        .resize()
-        .extra()
-    )
-  },
-  checkPayment: ctx => async rawProductData => {
-    const [oldBalance, walletId, productId, paymentMethod] = rawProductData.split(':')
-    await ctx.editMessageReplyMarkup({ inline_keyboard: [] })
-    const product = await productsModel.findById(productId)
     if (paymentMethod === 'gM') {
       const globalMoney = await axios.get(`${process.env.EASYPAY_URL}/walletGlobalMoney`)
-      if (Number(globalMoney.data.walletStatus.amount.slice(0,-2)) < Number(oldBalance.slice(0,-2)) + Number(product.price)) {
+      if (Number((globalMoney.data.balance / 100).toFixed(2)) < Number((oldBalance / 100).toFixed(2)) + Number(product.price)) {
         await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
+        blockedButton = false
         return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
       }
     }
@@ -172,15 +182,13 @@ const scenarious = {
       const easypay = await axios.get(`${process.env.EASYPAY_URL}/getWalletById`, { params: { walletId } })
       if (easypay.data[0].balance < Number(oldBalance) + Number(product.price) ) {
         await ctx.editMessageReplyMarkup({ inline_keyboard: inlineKeyboards.payProduct(oldBalance, walletId, productId, paymentMethod) })
+        blockedButton = false
         return await ctx.answerCbQuery('Платёж не найден! Попробуйте позже!')
       }
     }
-    if (product === null) {
-      return;
-    }
     // busyWallets.splice(busyWallets.indexOf(walletId), 1)
     const user = await usersModel.findOne({ userId: ctx.from.id })
-    const stock = product.stock[Math.floor(Math.random() * product.stock.length)]
+    const stock = product.stock[0] // Math.floor(Math.random() * product.stock.length)
     if (user.inviterId) {
       await usersModel.findOneAndUpdate({ userId: user.inviterId }, { $inc: { bonusBalance: Math.round((2 / 100) * product.price) } }) 
     }

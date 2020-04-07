@@ -51,7 +51,7 @@ bot.on('callback_query', async ctx => {
       return await anthology.get('checkPayment')(ctx)(callbackQuery.substr(2))
     }
     if (callbackQuery.startsWith('pPBB:')) {
-      return await anthology.get('payProductByBonuses')(ctx)(callbackQuery.substr(5))
+      // return await anthology.get('payProductByBonuses')(ctx)(callbackQuery.substr(5))
     }
     if (callbackQuery.startsWith('pP:')) {
       return await anthology.get('payProduct')(ctx)(callbackQuery.substr(3))
